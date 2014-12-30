@@ -1,0 +1,41 @@
+<pages>
+<page>
+    <title>Simple Page</title>
+    <ns>0</ns>
+    <id>325</id>
+    <revision>
+      <id>160875351</id>
+      <parentid>61398398</parentid>
+      <timestamp>2007-09-28T08:27:52Z</timestamp>
+      <contributor>
+        <username>Closedmouth</username>
+        <id>372693</id>
+      </contributor>
+      <comment>R from other capitalisation</comment>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text xml:space="preserve">[[Next page]]</text>
+      <sha1>5k8i2fnf0ikroxdc157isw1vs0bp8ed</sha1>
+    </revision>
+ </page>
+ <page>
+    <title>Action Film</title>
+    <ns>0</ns>
+    <id>325</id>
+    <redirect title="Action film" />
+    <revision>
+      <id>160875351</id>
+      <parentid>61398398</parentid>
+      <timestamp>2007-09-28T08:27:52Z</timestamp>
+      <contributor>
+        <username>Closedmouth</username>
+        <id>372693</id>
+      </contributor>
+      <comment>R from other capitalisation</comment>
+      <model>wikitext</model>
+      <format>text/x-wiki</format>
+      <text xml:space="preserve">#REDIRECT [[Action film]]{{R from other capitalisation}}</text>
+      <sha1>5k8i2fnf0ikroxdc157isw1vs0bp8ed</sha1>
+    </revision>
+  </page>
+  </pages>
