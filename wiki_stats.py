@@ -1,55 +1,107 @@
-import os
+import os, json
 
-class WikiStats(object):
-	@staticmethod
-	def get_nodes(datafile):
-		with open(datafile) as thefile:
-		    lines = thefile.read().splitlines()
+def log(message):
+  print(message)
 
-		nodes = {}
+class WikiPagesManager(object):
+  '''
+    Return a dict of key-values (page, children)
+    where children are all the pages that point to page
 
-		for line in lines:
-		    split = line.split('\t')
-		    name = split[0]
-		    if len(name):
-		    	name = name[0].upper() + name[1:]
-		    values = split[1:]
-		    if name in nodes:
-		    	nodes[name].extend(values)
-		    else: nodes[name] = values
+    The datafile argument should be the output of the Hadoop job
+  '''
+  @staticmethod
+  def get_nodes(datafile):
+    with open(datafile) as thefile:
+        lines = thefile.read().splitlines()
 
-		return nodes
+    nodes = {}
 
-	def __init__(self, datafile):
-		self.nodes = WikiStats.get_nodes(datafile)
+    for line in lines:
+        split = line.split('\t')
+        name = split[0]
+        if len(name):
+          name = name[0].upper() + name[1:]
+        values = split[1:]
+        if name in nodes:
+          nodes[name].extend(values)
+        else: nodes[name] = values
 
-	def get_next_page_for(self,page):
-		for node,children in self.nodes.items():
-			if page in children:
-				return node
+    return nodes
 
-	def get_next_page_series(self, page, series = [], stopAt = 'Philosophy'):
-		if(page in series):
-			series.append(page)
-			return series
-		series.append(page)
-		if(page == stopAt):
-			return series
+  def __init__(self, datafile):
+    self.nodes = WikiPagesManager.get_nodes(datafile)
+  
+  '''
+    Find next page for a certain wikipedia page
+    by finding the page parent in the tree
+  '''
+  def get_next_page_for(self,page):
+    for node,children in self.nodes.items():
+      if page in children:
+        return node
 
-		page = self.get_next_page_for(page)
+  '''
+    Find series of next pages that you'd get by doing the 'getting to Philosophy'
+    starting from a certain page.
+    Stop when a loop is found or when we arrive at the wanted page
+  '''
+  def get_next_page_series(self, page, series = [], stopAt = 'Philosophy'):
+    if(page in series):
+      series.append(page)
+      return series
+    series.append(page)
+    if(page == stopAt):
+      return series
 
-		return self.get_next_page_series(page, series, stopAt)
+    page = self.get_next_page_for(page)
 
+    return self.get_next_page_series(page, series, stopAt)
 
-	def get_distances_to_page(self,page='Philosophy'):
-		distances = {}
+  '''
+    Get a dict containing all the pages and their respective
+    distance to a certain page
+  '''
+  def get_distances_to_page(self,page='Philosophy'):
 
-		def process_node(name, distance):
-			distances[name] = distance
-			if name in self.nodes:
-				for child in self.nodes[name]:
-					process_node(child, distance + 1)
+    distances = {}
 
-		process_node(page, 0)
+    def process_node(name, distance):
+      distances[name] = distance
+      if name in self.nodes:
+        for child in self.nodes[name]:
+          process_node(child, distance + 1)
 
-		return distances
+    process_node(page, 0)
+
+    return distances
+
+def dumpDistancesToCertainPage(input, page='Philosophy'):
+  output = input + '.json'
+
+  log('Getting nodes from ' + input)
+  wpm = WikiPagesManager(input)
+  log('Getting nodes - Done')
+
+  log('Getting all distances to ' + page)
+  distances = wpm.get_distances_to_page(page)
+  log('Getting distances - Done')
+
+  log('Writing json output in ' + output)
+  with open(output, 'w') as outfile:
+    json.dump(distances, outfile)
+
+  log('Writing output - Done')
+
+if __name__ == '__main__':
+  from sys import argv
+
+  if len(argv) < 2:
+    print('Please specify at least the Hadoop job output file')
+    exit()
+
+  input = argv[1]
+  if len(argv) == 2:
+    dumpDistancesToCertainPage(input)
+  elif len(argv) == 3:
+    dumpDistancesToCertainPage(input, argv[2])
