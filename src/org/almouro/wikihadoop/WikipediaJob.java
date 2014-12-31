@@ -23,8 +23,6 @@ public class WikipediaJob {
 	conf.set("xmlinput.rootstart", "<pages>");
 	conf.set("xmlinput.rootend", "</pages>");
 
-	conf.set("mapred.min.split.size", "100000000");
-
 	Job job = Job.getInstance(conf, "word count");
 
 	job.setJarByClass(WikipediaJob.class);

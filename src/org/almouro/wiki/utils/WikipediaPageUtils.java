@@ -5,6 +5,7 @@ public class WikipediaPageUtils {
     private static String[] MEDIA_PREFIX = new String[] { "File", "Image" };
 
     // not exhaustive -> Easier to check list of wikipedia pages
+    // TODO WIKIPEDIA_NAMESPACE_PREFIX
     /*
      * private static String[] WIKIPEDIA_NAMESPACE_PREFIX = new String[]
      * {"Talk", "User", "Wikipedia", "MediaWiki", "Template", "Help",

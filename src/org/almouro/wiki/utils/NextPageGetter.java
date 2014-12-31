@@ -2,6 +2,7 @@ package org.almouro.wiki.utils;
 
 import java.util.LinkedHashMap;
 
+//TODO Clean code
 public class NextPageGetter {
 
     private class TagOccurences {
