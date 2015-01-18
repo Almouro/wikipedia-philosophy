@@ -13,16 +13,18 @@ class WikiPagesManager(object):
   @staticmethod
   def get_nodes(datafile):
     with open(datafile) as thefile:
-        lines = thefile.read().splitlines()
-
+        lines = thefile.read().split('\n')
     nodes = {}
 
-    for line in lines:
+    for i in range(len(lines)):
+        line = lines[i]
         split = line.split('\t')
-        name = split[0]
+        if len(split) < 2:
+          continue
+        name = split[1]
         if len(name):
           name = name[0].upper() + name[1:]
-        values = split[1:]
+        values = [split[0]]
         if name in nodes:
           nodes[name].extend(values)
         else: nodes[name] = values
@@ -66,13 +68,17 @@ class WikiPagesManager(object):
 
     distances = {}
 
+    stack = [{page: 0}]
+
     def process_node(name, distance):
       distances[name] = distance
       if name in self.nodes:
         for child in self.nodes[name]:
-          process_node(child, distance + 1)
+          stack.append({child: distance + 1})
 
-    process_node(page, 0)
+    while len(stack):
+      node, distance = stack.pop().items()[0]
+      process_node(node, distance)
 
     return distances
 

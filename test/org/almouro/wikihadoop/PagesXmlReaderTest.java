@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 
 import org.almouro.wiki.PageInfo;
+import org.almouro.wiki.PagesXmlReader;
 import org.junit.Test;
 
 public class PagesXmlReaderTest {

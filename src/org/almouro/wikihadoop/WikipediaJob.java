@@ -3,13 +3,13 @@ package org.almouro.wikihadoop;
 import java.util.Date;
 
 import org.almouro.hadoop.utils.TextArrayWritable;
-import org.almouro.hadoop.utils.XmlInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.mahout.classifier.bayes.XmlInputFormat;
 
 public class WikipediaJob {
 
