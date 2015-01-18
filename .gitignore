@@ -3,6 +3,7 @@ bin/
 .classpath
 .project
 
+result*
 input*/
 output*/
-result*
+*~
