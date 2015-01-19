@@ -1,23 +1,27 @@
 package org.almouro.wiki.utils;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.BufferedWriter;
 import java.io.IOException;
+
+import org.almouro.util.FileUtils;
 
 public class WikipediaPageUtils {
 
-	public static final String LINE_BREAK = System.getProperty("line.separator");
-
 	private static String[] MEDIA_PREFIX = new String[] { "File", "Image" };
 
-	// not exhaustive -> Easier to check list of wikipedia pages
-	// TODO WIKIPEDIA_NAMESPACE_PREFIX
-	/*
-	 * private static String[] WIKIPEDIA_NAMESPACE_PREFIX = new String[]
-	 * {"Talk", "User", "Wikipedia", "MediaWiki", "Template", "Help",
-	 * "Category", "Portal", "Book", "Draft", "Education Program", "TimedText",
-	 * "Module", "Topic"};
-	 */
+	private static String[] WIKIPEDIA_NAMESPACE_PREFIX = new String[] { "Talk", "User",
+			"Wikipedia", "MediaWiki", "Template", "Help", "Category", "Portal", "Book", "Draft",
+			"Education Program", "TimedText", "Module", "Topic", "WP", "WT", "Special", "CAT",
+			"MOS", "H", "P", "T", "MP", "WikiProject", "Wikiproject", "Mos", "MoS" };
+
+	public static boolean isSpecialPage(String title) {
+		for (String prefix : WIKIPEDIA_NAMESPACE_PREFIX) {
+			if (doesTitleStartWithWikiPrefix(title, prefix)
+					|| doesTitleStartWithWikiPrefix(title, prefix + " Talk"))
+				return true;
+		}
+		return isMediaPage(title);
+	}
 
 	public static String getNextPage(String pageText) {
 		return getFormattedTitle(new NextPageGetter().readAndGetLink(pageText));
@@ -65,14 +69,14 @@ public class WikipediaPageUtils {
 	 */
 	public static void writePageToFile(String outputFolder, String pageTitle, String pageText,
 			long pageNumber) throws IOException {
-		
-		FileOutputStream fs = new FileOutputStream(new File(outputFolder
-				+ pageTitle.replaceAll("[:\\\\/*\"?|<>]", "_") + "_page" + pageNumber + ".txt"));
+		String filePath = outputFolder + pageTitle.replaceAll("[:\\\\/*\"?|<>]", "_") + "_page"
+				+ pageNumber + ".txt";
+		BufferedWriter writer = FileUtils.getBufferedWriter(filePath);
 
-		fs.write(pageTitle.getBytes());
-		fs.write((LINE_BREAK + LINE_BREAK).getBytes());
-		fs.write(pageText.getBytes());
-
-		fs.close();
+		writer.write(pageTitle);
+		writer.write(FileUtils.LINE_BREAK + FileUtils.LINE_BREAK);
+		writer.write(pageText);
+		writer.flush();
+		writer.close();
 	}
 }

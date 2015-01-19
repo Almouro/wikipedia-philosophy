@@ -10,38 +10,51 @@ class WikiPagesManager(object):
 
     The datafile argument should be the output of the Hadoop job
   '''
-  @staticmethod
-  def get_nodes(datafile):
+  def get_nodes(self, datafile):
     with open(datafile) as thefile:
         lines = thefile.read().split('\n')
-    nodes = {}
 
+    self.nodes = {}
+    self.pages = {}
+    self.nb_pages = 0
+    
+    print str(len(lines)) + " pages found"
     for i in range(len(lines)):
         line = lines[i]
         split = line.split('\t')
-        if len(split) < 2:
-          continue
-        name = split[1]
-        if len(name):
-          name = name[0].upper() + name[1:]
-        values = [split[0]]
-        if name in nodes:
-          nodes[name].extend(values)
-        else: nodes[name] = values
 
-    return nodes
+        if len(split) < 2:
+            continue 
+
+        name = split[0]
+        if len(name):
+          name = name[0].upper() + name[1:] 
+        
+        values = [split[1]]
+        is_redirect = len(split) > 2
+
+        if not is_redirect:
+          self.nb_pages += 1
+
+        self.pages[split[1]] = {
+          "is_redirect": is_redirect,
+          "next_page": name
+        }
+        
+        if name in self.nodes:
+          self.nodes[name].extend(values)
+        else: self.nodes[name] = values
+
+    print str(self.nb_pages) + " (not redirected) pages found"
 
   def __init__(self, datafile):
-    self.nodes = WikiPagesManager.get_nodes(datafile)
+    self.get_nodes(datafile)
   
   '''
     Find next page for a certain wikipedia page
-    by finding the page parent in the tree
   '''
   def get_next_page_for(self,page):
-    for node,children in self.nodes.items():
-      if page in children:
-        return node
+    return self.pages[page]["next_page"]
 
   '''
     Find series of next pages that you'd get by doing the 'getting to Philosophy'
@@ -49,6 +62,7 @@ class WikiPagesManager(object):
     Stop when a loop is found or when we arrive at the wanted page
   '''
   def get_next_page_series(self, page, series = [], stopAt = 'Philosophy'):
+    print page
     if(page in series):
       series.append(page)
       return series
@@ -68,46 +82,86 @@ class WikiPagesManager(object):
 
     distances = {}
 
-    stack = [{page: 0}]
+#     stack = [{page: 0}]
 
     def process_node(name, distance):
-      distances[name] = distance
+      if name in distances:
+          return
+
+      if not self.pages[name]["is_redirect"]:
+        distances[name] = distance
+
       if name in self.nodes:
         for child in self.nodes[name]:
-          stack.append({child: distance + 1})
+            process_node(child, distance + 1)
+#           stack.append({child: distance + 1})
 
-    while len(stack):
-      node, distance = stack.pop().items()[0]
-      process_node(node, distance)
-
+#     while len(stack):
+#       node, distance = stack.pop().items()[0]
+#       process_node(node, distance)
+    
+    process_node(page, 0)
+    #print str(len(distances.keys()) * 100 / self.nb_pages) + '% success'
     return distances
 
-def dumpDistancesToCertainPage(input, page='Philosophy'):
-  output = input + '.json'
+  def get_getting_to_page_ratio(self):
+    i = 0
+    ratios = {}
 
-  log('Getting nodes from ' + input)
-  wpm = WikiPagesManager(input)
-  log('Getting nodes - Done')
+    for page in wpm.pages:
+      i += 1
+      if i % 100 == 0:
+        print i
+      if self.pages[page]["is_redirect"]:
+        continue
 
-  log('Getting all distances to ' + page)
-  distances = wpm.get_distances_to_page(page)
-  log('Getting distances - Done')
+      n = len(self.get_distances_to_page(page).keys())
+      ratios[page] = n
 
-  log('Writing json output in ' + output)
-  with open(output, 'w') as outfile:
-    json.dump(distances, outfile)
+    return ratios
 
-  log('Writing output - Done')
+  def dump_pages_ratios(self, output=None):
+    if not output:
+      output = "ratios.json"
+
+    log('Getting all ratios')
+    ratios = wpm.get_getting_to_page_ratio()
+    log('Getting ratios - Done')
+
+    ratios = {
+      "pages": self.nb_pages,
+      "ratios": ratios
+    }
+
+    log('Writing json output in ' + output)
+    with open(output, 'w') as outfile:
+      json.dump(ratios, outfile)
+
+    log('Writing output - Done')
+
+  def dump_distances_to_page(self, page='Philosophy', output=None):
+    if not output:
+      output = page + "_distances.json"
+
+    log('Getting all distances to ' + page)
+    distances = wpm.get_distances_to_page(page)
+    log('Getting distances - Done')
+
+    log('Writing json output in ' + output)
+    with open(output, 'w') as outfile:
+      json.dump(distances, outfile)
+
+    log('Writing output - Done')
 
 if __name__ == '__main__':
   from sys import argv
 
   if len(argv) < 2:
-    print('Please specify at least the Hadoop job output file')
-    exit()
+    print('Please specify the Hadoop job output file')
 
-  input = argv[1]
-  if len(argv) == 2:
-    dumpDistancesToCertainPage(input)
-  elif len(argv) == 3:
-    dumpDistancesToCertainPage(input, argv[2])
+  else:
+    input = argv[1]
+    log('Getting nodes from ' + input)
+    wpm = WikiPagesManager(input)
+    log('Getting nodes - Done')
+
